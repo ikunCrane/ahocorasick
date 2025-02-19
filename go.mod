@@ -1,4 +1,4 @@
-module ahocorasick
+module goahocorasick
 
 go 1.22
 
