@@ -35,7 +35,10 @@ func TestBuild(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
+	var data []interface{}
+	for _, keyword := range keywords {
+		data = append(data, keyword)
+	}
 	m := new(Machine)
 	m.Build(keywords)
 	//m.PrintFailure()
@@ -47,6 +50,10 @@ func TestMultiPatternSearchEnglish(t *testing.T) {
 	keywords, err := Read("test_keywords_eng")
 	if err != nil {
 		t.Error(err)
+	}
+	var data []interface{}
+	for _, keyword := range keywords {
+		data = append(data, keyword)
 	}
 	m := new(Machine)
 	m.Build(keywords)
@@ -67,15 +74,20 @@ func TestMultiPatternSearchChinese(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	var customdata map[string]interface{}
+	customdata = make(map[string]interface{})
+	for index, data := range keywords {
+		customdata[string(data)] = index
+	}
 	m := new(Machine)
-	m.Build(keywords)
+	m.BuildByCustom(keywords, customdata)
 	//m.PrintFailure()
 	//m.PrintOutput()
 
-	content := []rune("你不会想到阿拉伯人会踢出阿根廷风格的足球更何况是埃及风格")
+	content := []rune("你不会想到阿拉伯人会踢出阿根廷风格的足球更何况是埃及风格啊")
 	terms := m.MultiPatternSearch(content, false)
 	for _, term := range terms {
-		fmt.Printf("find %s @%d in %s\n", string(term.Word), term.Pos, string(content))
+		fmt.Printf("find %s @%d in %s 自定义数据:%v\n", string(term.Word), term.Pos, string(content), term.CustomData)
 	}
 	fmt.Printf("\n")
 }
@@ -86,6 +98,7 @@ func TestExactSearchEnglish(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
 	m := new(Machine)
 	m.Build(keywords)
 

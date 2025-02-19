@@ -11,18 +11,29 @@ import (
 const FAIL_STATE = -1
 const ROOT_STATE = 1
 
+// 新增结构体：将模式串与自定义数据绑定
+type PatternData struct {
+	Pattern []rune      // 原始模式串
+	Data    interface{} // 自定义数据（可以是任意类型）
+}
+
 type Machine struct {
 	trie    *godarts.DoubleArrayTrie
 	failure []int
-	output  map[int]([][]rune)
+	output  map[int][]PatternData // 每个状态对应多个PatternData
 }
 
 type Term struct {
-	Pos  int
-	Word []rune
+	Pos        int
+	Word       []rune
+	CustomData interface{}
 }
 
 func (m *Machine) Build(keywords [][]rune) (err error) {
+	return m.BuildByCustom(keywords, nil)
+}
+
+func (m *Machine) BuildByCustom(keywords [][]rune, customdata map[string]interface{}) (err error) {
 	if len(keywords) == 0 {
 		return fmt.Errorf("empty keywords")
 	}
@@ -34,10 +45,16 @@ func (m *Machine) Build(keywords [][]rune) (err error) {
 	if err != nil {
 		return err
 	}
+	m.output = make(map[int][]PatternData, 0)
 
-	m.output = make(map[int]([][]rune), 0)
 	for idx, val := range d.Output {
-		m.output[idx] = append(m.output[idx], val)
+
+		pattern := new(PatternData)
+		if _, ok := customdata[string(val)]; ok != false {
+			pattern.Data = customdata[string(val)]
+		}
+		pattern.Pattern = val
+		m.output[idx] = append(m.output[idx], *pattern)
 	}
 
 	queue := make([](*godarts.LinkedListTrieNode), 0)
@@ -65,7 +82,13 @@ func (m *Machine) Build(keywords [][]rune) (err error) {
 				goto set_state
 			}
 			if _, ok := m.output[outState]; ok != false {
-				copyOutState := make([][]rune, 0)
+				/*copyOutState := make([][]rune, 0)
+				for _, o := range m.output[outState] {
+					copyOutState = append(copyOutState, o)
+				}
+				m.output[n.Base] = append(copyOutState, m.output[n.Base]...)
+				*/
+				copyOutState := make([]PatternData, 0)
 				for _, o := range m.output[outState] {
 					copyOutState = append(copyOutState, o)
 				}
@@ -79,7 +102,6 @@ func (m *Machine) Build(keywords [][]rune) (err error) {
 
 	return nil
 }
-
 func (m *Machine) PrintFailure() {
 	fmt.Printf("+-----+-----+\n")
 	fmt.Printf("|%5s|%5s|\n", "index", "value")
@@ -97,7 +119,7 @@ func (m *Machine) PrintOutput() {
 	for i, v := range m.output {
 		var val string
 		for _, o := range v {
-			val = val + " " + string(o)
+			val = val + " " + string(o.Pattern)
 		}
 		fmt.Printf("|%5d|%10s|\n", i, val)
 	}
@@ -149,8 +171,9 @@ func (m *Machine) MultiPatternSearch(content []rune, returnImmediately bool) [](
 			if val, ok := m.output[state]; ok != false {
 				for _, word := range val {
 					term := new(Term)
-					term.Pos = pos - len(word) + 1
-					term.Word = word
+					term.Pos = pos - len(word.Pattern) + 1
+					term.Word = word.Pattern
+					term.CustomData = word.Data
 					terms = append(terms, term)
 					if returnImmediately {
 						return terms

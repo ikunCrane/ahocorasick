@@ -1,6 +1,7 @@
 ## Aho–Corasick algorithm
 
 #### Intro
+fork  https://github.com/anknown/ahocorasick
 
 A faster and more effective implement of *Aho-Corasick algorithm* in golang and supports Both Chinese and English. To improve the performance and reduce memory usage, the program uses *Double Array Trie* instead of common *Linked List Trie*. In the benchmark, `it is 10 times faster than the most popular AC algorithm implement in golang @ github and tenth of its memory usage`. You can find more information in the benchmark parts.
 
