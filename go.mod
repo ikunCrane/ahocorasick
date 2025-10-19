@@ -1,4 +1,4 @@
-module github.com/samwafgo/ahocorasick
+module github.com/ikunCrane/ahocorasick
 
 go 1.22
 
